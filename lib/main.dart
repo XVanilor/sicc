@@ -1,34 +1,54 @@
 import 'package:flutter/material.dart';
-import 'QRScan.dart';
-import 'CrateList.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sicc/Config.dart';
+import 'package:sicc/Home.dart';
+import 'Service/SiccApi.dart';
 
-void main() {
+Future<void> main() async {
+
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+
   runApp(const SICCMain());
 }
 
-class SICCMain extends StatelessWidget {
+class SICCMain extends StatefulWidget {
+
   const SICCMain({super.key});
 
   @override
+  State<StatefulWidget> createState() => _SICCMainState();
+
+}
+
+class _SICCMainState extends State<SICCMain> {
+
+  late SharedPreferences _prefs;
+
+  void loadPrefs() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _prefs = prefs;
+    });
+  }
+
+  @override
+  void initState() {
+    loadPrefs();
+    super.initState();
+  }
+  @override
   Widget build(BuildContext context) {
+    
+    
     return MaterialApp(
-      home: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          appBar: AppBar(
-            bottom: const TabBar(
-              tabs: [
-                Tab(icon: Icon(Icons.format_list_bulleted)),
-                Tab(icon: Icon(Icons.qr_code_outlined))
-              ],
-            ),
-            title: const Text('SICC Application'),
-          ),
-          body: const TabBarView(
-            children: [CrateList(), QRScan()],
-          ),
-        ),
-      ),
+      initialRoute: (SiccApi.isConfigured(_prefs) ? "/" : "/config"),
+      routes: {
+        // When navigating to the "/" route, build the FirstScreen widget.
+        '/': (context) => const Home(),
+        // When navigating to the "/second" route, build the SecondScreen widget.
+        '/config': (context) => const Config(),
+      },
     );
   }
 }

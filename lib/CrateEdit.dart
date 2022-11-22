@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sicc/CrateQR.dart';
 import 'package:sicc/Model/Crate.dart';
 import 'package:sicc/Service/SiccApi.dart';
 import 'package:uuid/uuid.dart';
 
 class CrateEdit extends StatefulWidget {
+  final isNameEditable;
   final Crate crate;
 
-  const CrateEdit({Key? key, required this.crate}) : super(key: key);
+  const CrateEdit({Key? key, required this.crate, required this.isNameEditable})
+      : super(key: key);
 
   @override
   State<CrateEdit> createState() => _CrateEditState();
@@ -16,8 +19,24 @@ class CrateEdit extends StatefulWidget {
 class _CrateEditState extends State<CrateEdit> {
   bool changeMade = false;
 
+  late SharedPreferences _prefs;
+
+  void loadPrefs() async {
+    SharedPreferences prefs  = await SharedPreferences.getInstance();
+    setState(() {
+      _prefs = prefs;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadPrefs();
+  }
+
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
         appBar: AppBar(title: const Text("Edit a Crate"), actions: <Widget>[
           IconButton(
@@ -41,12 +60,12 @@ class _CrateEditState extends State<CrateEdit> {
                     Then, we need to pass a shared secret into the QR: This might be the Creator's public (but restricted) API token
                     The goal is to ensure that only user with physical access to the QR code is allowed to use it
                  */
-                String qrCodeData =
-                    "siccapp://${SiccApi.apiBaseUrl.replaceAll("https://", "").replaceAll("http://", "")}::${SiccApi.creatorApiToken}::${widget.crate.uuid}";
+                String qrCodeData = "siccapp://${_prefs.getString(SiccApi.apiUrlKey)?.replaceAll("https://", "").replaceAll("http://", "")}::${_prefs.getString(SiccApi.privateApiTokenKey)}::${widget.crate.uuid}";
                 Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CrateQR(qrData: qrCodeData, crateName: widget.crate.name))
-                );
+                    MaterialPageRoute(
+                        builder: (context) => CrateQR(
+                            qrData: qrCodeData, crateName: widget.crate.name)));
               }),
           IconButton(
             icon: const Icon(Icons.save),
@@ -69,16 +88,8 @@ class _CrateEditState extends State<CrateEdit> {
                     alignment: Alignment.centerLeft,
                     child: Padding(
                       padding: const EdgeInsets.only(top: 10.0),
-                      child:  Text(
-                        widget.crate.name,
-                        style: const TextStyle(
-                          fontSize: 25.0,
-                          //fontStyle: FontStyle.italic,
-                          //fontWeight: FontWeight.bold
-                        ),
-                      ),
-                    )
-                ),
+                      child: _crateNameView(),
+                    )),
                 ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
@@ -147,5 +158,30 @@ class _CrateEditState extends State<CrateEdit> {
                     ]))
           ],
         ));
+  }
+
+  _crateNameView() {
+    if (widget.isNameEditable) {
+      return TextFormField(
+        decoration: const InputDecoration(border: UnderlineInputBorder()),
+        autofocus: false,
+        maxLines: 1,
+        initialValue: widget.crate.name,
+        style: const TextStyle(fontSize: 25.0),
+        onChanged: (text) {
+          setState(() {
+            widget.crate.name = text;
+            changeMade = true;
+          });
+        },
+      );
+    } else {
+      return Text(widget.crate.name,
+          style: const TextStyle(
+            fontSize: 25.0,
+            //fontStyle: FontStyle.italic,
+            //fontWeight: FontWeight.bold
+          ));
+    }
   }
 }
