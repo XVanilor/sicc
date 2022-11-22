@@ -88,7 +88,7 @@ class _QRScanState extends State<QRScan> {
         String crateUuid = data[2];
 
         Crate newCrate = Crate(uuid: crateUuid, name: "", items: []);
-        Navigator.push(context, MaterialPageRoute(builder: (context) => CrateEdit(crate: newCrate)));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => CrateEdit(crate: newCrate, isNameEditable: false)));
       }
     });
   }
