@@ -89,7 +89,7 @@ class SiccApi {
     bool userCreation = await createUser(username, publicApiToken);
     if(!userCreation)
       {
-        prefs.clear();
+        SiccApi.resetConfig();
         throw "Cannot create your account. Are you connected to Internet ?";
       }
 
