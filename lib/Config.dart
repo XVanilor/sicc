@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'Home.dart';
 import 'Service/SiccApi.dart';
 
 class Config extends StatefulWidget {
@@ -13,12 +14,14 @@ class Config extends StatefulWidget {
 
 class _ConfigState extends State<Config> {
 
-  SharedPreferences? _prefs;
+  late SharedPreferences _prefs;
+  bool isLoaded = false;
 
   void loadPrefs() async {
     SharedPreferences prefs  = await SharedPreferences.getInstance();
     setState(() {
       _prefs = prefs;
+      isLoaded = true;
     });
   }
 
@@ -38,9 +41,10 @@ class _ConfigState extends State<Config> {
 
     final SiccApi api = SiccApi();
 
-    return Scaffold(
+    return !isLoaded ? const CircularProgressIndicator() : Scaffold(
         appBar: AppBar(title: const Text("Configuration")),
-        body: Padding(
+        body: SingleChildScrollView(
+          child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Center(
             child: Column(
@@ -58,7 +62,9 @@ class _ConfigState extends State<Config> {
                         style: TextStyle(fontSize: 20.0),
                       ),
                       TextButton(
-                          onPressed: () { /* TODO Redirect to Scan QR page */},
+                          onPressed: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => Home(1)));
+                          },
                           child: const Text("Scan a QR Code", style: TextStyle(fontSize: 20.0))
                       ),
                       const Text(
@@ -89,7 +95,7 @@ class _ConfigState extends State<Config> {
                                       decoration: const InputDecoration(
                                           hintText: "https://mysiccapi.app"
                                       ),
-                                      initialValue: _prefs?.getString(SiccApi.apiUrlKey) ?? "",
+                                      initialValue: _prefs.getString(SiccApi.apiUrlKey) ?? "",
                                       validator: (value) {
                                         if(value == null || value.isEmpty || Uri.tryParse(value) == null)
                                         {
@@ -103,7 +109,7 @@ class _ConfigState extends State<Config> {
                                       decoration: const InputDecoration(
                                           hintText: "Your name"
                                       ),
-                                      initialValue: _prefs?.getString("username") ?? "",
+                                      initialValue: _prefs.getString("username") ?? "",
                                       validator: (value) {
                                         if(value == null || value.isEmpty)
                                         {
@@ -117,7 +123,7 @@ class _ConfigState extends State<Config> {
                                       decoration: const InputDecoration(
                                           hintText: "Your Private API Token"
                                       ),
-                                      initialValue: _getVanishedPrivateApiToken(),
+                                      initialValue: _prefs.getString(SiccApi.privateApiTokenKey) ?? "",
                                       validator: (value) {
                                         if(value == null || value.isEmpty || !Uuid.isValidUUID(fromString: value))
                                         {
@@ -157,7 +163,6 @@ class _ConfigState extends State<Config> {
                                                       Navigator.of(ctx).pop();
                                                     },
                                                     child: Container(
-                                                      color: Colors.green,
                                                       padding: const EdgeInsets.all(14),
                                                       child: const Text("Try again"),
                                                     ),
@@ -192,14 +197,7 @@ class _ConfigState extends State<Config> {
             ),
           ),
         )
+    )
     );
   }
-
-  _getVanishedPrivateApiToken()
-  {
-    final String token = _prefs?.getString(SiccApi.privateApiTokenKey) ?? "";
-    return token;
-    return (token != "" ? "${token[0]}**********************************${token[token.length - 1]}" : "");
-  }
-
 }
