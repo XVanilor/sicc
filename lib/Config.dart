@@ -121,9 +121,9 @@ class _ConfigState extends State<Config> {
                                     TextFormField(
                                       onSaved: (value){privKey=value;},
                                       decoration: const InputDecoration(
-                                          hintText: "Your Private API Token"
+                                          hintText: "Your API Token"
                                       ),
-                                      initialValue: _prefs.getString(SiccApi.privateApiTokenKey) ?? "",
+                                      initialValue: _prefs.getString(SiccApi.apiKey) ?? "",
                                       validator: (value) {
                                         if(value == null || value.isEmpty || !Uuid.isValidUUID(fromString: value))
                                         {

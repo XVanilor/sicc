@@ -53,14 +53,7 @@ class _CrateEditState extends State<CrateEdit> {
               icon: const Icon(Icons.qr_code),
               onPressed: () async {
                 // Generate the QRCode with embarked UUIDv4 of the crate
-                /**
-                    @TODO
-                    Implement 2 types of API token: Creator's and Reader's. Reader's may be anonymous. It's like public and private key, everyone has your Creator Token (public key) but you're the only one to have access to your Reader Token
-                    We need to ensure that no one from outside (ie: which did not scan the QR) can access RW to our data
-                    Then, we need to pass a shared secret into the QR: This might be the Creator's public (but restricted) API token
-                    The goal is to ensure that only user with physical access to the QR code is allowed to use it
-                 */
-                String qrCodeData = "siccapp://${_prefs.getString(SiccApi.apiUrlKey)?.replaceAll("https://", "").replaceAll("http://", "")}::${_prefs.getString(SiccApi.privateApiTokenKey)}::${widget.crate.uuid}";
+                String qrCodeData = "siccapp://${_prefs.getString(SiccApi.apiUrlKey)?.replaceAll("https://", "").replaceAll("http://", "")}::${_prefs.getString(SiccApi.apiKey)}::${widget.crate.uuid}";
                 Navigator.push(
                     context,
                     MaterialPageRoute(
