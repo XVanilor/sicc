@@ -7,8 +7,8 @@ import 'package:uuid/uuid.dart';
 class SiccApi {
 
   static String apiUrlKey = "API_URL";
-  static String privateApiTokenKey = "PRIV_KEY";
-  static String publicApiTokenKey = "PUB_KEY";
+  static String apiKey = "PRIV_KEY";
+  static String enrollmentToken = "PUB_KEY";
 
   Future<List<Crate>> getCrates() async {
 
@@ -38,7 +38,7 @@ class SiccApi {
         Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/save.php"),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'X-API-TOKEN': prefs.getString(SiccApi.privateApiTokenKey) ?? ""
+          'X-API-TOKEN': prefs.getString(SiccApi.apiKey) ?? ""
         },
       body: jsonEncode(crate.toJson())
     );
@@ -64,7 +64,7 @@ class SiccApi {
       Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/delete.php?id=$crateUuid"),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'X-API-TOKEN': prefs.getString(SiccApi.privateApiTokenKey) ?? ""
+        'X-API-TOKEN': prefs.getString(SiccApi.apiKey) ?? ""
       },
     );
 
@@ -83,37 +83,37 @@ class SiccApi {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
     prefs.setString(SiccApi.apiUrlKey, apiUrl);
-    prefs.setString(SiccApi.privateApiTokenKey, apiToken);
-    String publicApiToken = const Uuid().v4();
+    prefs.setString(SiccApi.apiKey, apiToken);
+    String enrollmentKey = const Uuid().v4();
 
-    bool userCreation = await createUser(username, publicApiToken);
+    bool userCreation = await createUser(username, enrollmentKey);
     if(!userCreation)
       {
         SiccApi.resetConfig();
         throw "Cannot create your account. Are you connected to Internet ?";
       }
 
-    prefs.setString(SiccApi.publicApiTokenKey, publicApiToken);
+    prefs.setString(SiccApi.enrollmentToken, enrollmentKey);
 
     return true;
   }
 
-  Future<bool> createUser(String username, String publicApiToken) async {
+  Future<bool> createUser(String username, String enrollmentToken) async {
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
     if(!prefs.containsKey(SiccApi.apiUrlKey) || prefs.getString(SiccApi.apiUrlKey)  == "" ||
-        !prefs.containsKey(SiccApi.privateApiTokenKey) || prefs.getString(SiccApi.privateApiTokenKey) == "")
+        !prefs.containsKey(SiccApi.apiKey) || prefs.getString(SiccApi.apiKey) == "")
       {
         throw "API is not configured yet";
       }
 
-    Map<String, dynamic> jsonBody = {"username": username, "enrollmentToken": publicApiToken};
+    Map<String, dynamic> jsonBody = {"username": username, "enrollmentToken": enrollmentToken};
     
     Response res = await post(
       Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/create_user.php"),
       headers: <String, String>{
-        'X-API-TOKEN': prefs.getString(SiccApi.privateApiTokenKey) ?? ""
+        'X-API-TOKEN': prefs.getString(SiccApi.apiKey) ?? ""
       },
       body: jsonEncode(jsonBody)
     );
@@ -133,7 +133,7 @@ class SiccApi {
     final apiUri = Uri.tryParse(prefs.getString(SiccApi.apiUrlKey) ?? "");
     final isApiUriValid = apiUri != null && apiUri.scheme.startsWith('http');
 
-    return isApiUriValid && Uuid.isValidUUID(fromString: prefs.getString(SiccApi.privateApiTokenKey) ?? "");
+    return isApiUriValid && Uuid.isValidUUID(fromString: prefs.getString(SiccApi.apiKey) ?? "");
   }
 
   static Future<bool> resetConfig() async {
@@ -147,8 +147,8 @@ class SiccApi {
     }
 
     prefs.remove(SiccApi.apiUrlKey);
-    prefs.remove(SiccApi.privateApiTokenKey);
-    prefs.remove(SiccApi.publicApiTokenKey);
+    prefs.remove(SiccApi.apiKey);
+    prefs.remove(SiccApi.enrollmentToken);
 
     return true;
   }
