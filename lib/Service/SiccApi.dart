@@ -108,7 +108,7 @@ class SiccApi {
         throw "API is not configured yet";
       }
 
-    Map<String, dynamic> jsonBody = {"username": username, "publicApiToken": publicApiToken};
+    Map<String, dynamic> jsonBody = {"username": username, "enrollmentToken": publicApiToken};
     
     Response res = await post(
       Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/create_user.php"),
