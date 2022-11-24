@@ -122,7 +122,7 @@ class _CrateListState extends State<CrateList> {
           ),
           Positioned(
             left: 30.0,
-            bottom: 30.0,
+            bottom: 45.0,
             child: Text(
                 "Loggued as ${_prefs.getString(SiccApi.username) ?? ""}",
               style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12.0)
