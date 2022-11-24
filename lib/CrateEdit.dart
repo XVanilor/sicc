@@ -1,9 +1,9 @@
+import 'CrateQR.dart';
+import '/Model/Crate.dart';
+import '/Service/SEPManager.dart';
+import '/Service/SiccApi.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sicc/CrateQR.dart';
-import 'package:sicc/Model/Crate.dart';
-import "package:sicc/Service/SEPManager.dart";
-import 'package:sicc/Service/SiccApi.dart';
 import 'package:uuid/uuid.dart';
 
 class CrateEdit extends StatefulWidget {

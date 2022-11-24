@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sicc/Config.dart';
-import 'package:sicc/Service/SiccApi.dart';
+import 'Config.dart';
+import '/Service/SiccApi.dart';
 import 'QRScan.dart';
 import 'CrateList.dart';
 

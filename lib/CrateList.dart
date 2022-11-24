@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sicc/Model/Crate.dart';
-import 'package:sicc/CrateEdit.dart';
-import 'package:sicc/Service/SiccApi.dart';
+import '/Model/Crate.dart';
+import 'CrateEdit.dart';
+import '/Service/SiccApi.dart';
 import 'package:uuid/uuid.dart';
 
 class CrateList extends StatefulWidget {
