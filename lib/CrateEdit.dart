@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sicc/CrateQR.dart';
 import 'package:sicc/Model/Crate.dart';
+import "package:sicc/Service/SEPManager.dart";
 import 'package:sicc/Service/SiccApi.dart';
 import 'package:uuid/uuid.dart';
 
 class CrateEdit extends StatefulWidget {
+
   final isNameEditable;
   final Crate crate;
 
@@ -38,7 +40,19 @@ class _CrateEditState extends State<CrateEdit> {
   Widget build(BuildContext context) {
 
     return Scaffold(
-        appBar: AppBar(title: const Text("Edit a Crate"), actions: <Widget>[
+        appBar: AppBar(
+            title: const Text("Edit a Crate"),
+            leading: Builder(
+              builder: (BuildContext context) {
+                return IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, "/");
+                  },
+                );
+              },
+            ),
+            actions: <Widget>[
           IconButton(
               onPressed: () {
                 setState(() {
@@ -52,8 +66,13 @@ class _CrateEditState extends State<CrateEdit> {
           IconButton(
               icon: const Icon(Icons.qr_code),
               onPressed: () async {
+
                 // Generate the QRCode with embarked UUIDv4 of the crate
-                String qrCodeData = "siccapp://${_prefs.getString(SiccApi.apiUrlKey)?.replaceAll("https://", "").replaceAll("http://", "")}::${_prefs.getString(SiccApi.apiKey)}::${widget.crate.uuid}";
+                String qrCodeData = SEPManager.encodeQRData(
+                    _prefs.getString(SiccApi.apiUrlKey) ?? "nullurl",
+                    _prefs.getString(SiccApi.enrollmentToken) ?? "nulltoken",
+                    widget.crate.uuid
+                );
                 Navigator.push(
                     context,
                     MaterialPageRoute(

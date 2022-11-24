@@ -3,12 +3,14 @@ import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sicc/Model/Crate.dart';
 import 'package:uuid/uuid.dart';
+import '../Model/User.dart';
 
 class SiccApi {
 
   static String apiUrlKey = "API_URL";
   static String apiKey = "PRIV_KEY";
   static String enrollmentToken = "PUB_KEY";
+  static String username = "USERNAME";
 
   Future<List<Crate>> getCrates() async {
 
@@ -17,7 +19,7 @@ class SiccApi {
     Response res = await get(Uri.parse("${prefs.getString(SiccApi.apiUrlKey)}/list.php"));
 
     if(res.statusCode == 200){
-      List<dynamic> body = jsonDecode(res.body);
+      List<dynamic> body = jsonDecode(res.body)["data"];
 
       List<Crate> crates = body.map((dynamic item) => Crate.fromJson(item)).toList().cast<Crate>();
 
@@ -45,7 +47,7 @@ class SiccApi {
 
     if(res.statusCode == 200)
       {
-        List<dynamic> body = jsonDecode(res.body);
+        List<dynamic> body = jsonDecode(res.body)["data"];
         return Crate.fromJson(body[0]);
       }
     else
@@ -78,54 +80,114 @@ class SiccApi {
     }
   }
 
-  Future<bool> configure(String apiUrl, String username, String apiToken) async {
+  Future<bool> configure(String apiUrl, String username, String apiKey) async {
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
+    if(Uri.tryParse(apiUrl) == null)
+    {
+      throw "URL is invalid";
+    }
     prefs.setString(SiccApi.apiUrlKey, apiUrl);
-    prefs.setString(SiccApi.apiKey, apiToken);
-    String enrollmentKey = const Uuid().v4();
 
-    bool userCreation = await createUser(username, enrollmentKey);
-    if(!userCreation)
+    User? user = await createUser(username, apiKey);
+    if(user == null)
       {
         SiccApi.resetConfig();
         throw "Cannot create your account. Are you connected to Internet ?";
       }
 
-    prefs.setString(SiccApi.enrollmentToken, enrollmentKey);
+    prefs.setString(SiccApi.apiKey, user.apiKey);
+    prefs.setString(SiccApi.enrollmentToken, user.enrollmentToken);
+    prefs.setString(SiccApi.username, user.name);
 
     return true;
   }
 
-  Future<bool> createUser(String username, String enrollmentToken) async {
+  Future<User?> createUser(String username, String apiKey) async {
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    if(!prefs.containsKey(SiccApi.apiUrlKey) || prefs.getString(SiccApi.apiUrlKey)  == "" ||
-        !prefs.containsKey(SiccApi.apiKey) || prefs.getString(SiccApi.apiKey) == "")
+    if(!prefs.containsKey(SiccApi.apiUrlKey) || prefs.getString(SiccApi.apiUrlKey)  == "")
       {
-        throw "API is not configured yet";
+        throw "API URL is not configured yet";
       }
 
-    Map<String, dynamic> jsonBody = {"username": username, "enrollmentToken": enrollmentToken};
+    Map<String, dynamic> jsonBody = {"username": username};
     
     Response res = await post(
-      Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/create_user.php"),
+      Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/register.php"),
       headers: <String, String>{
-        'X-API-TOKEN': prefs.getString(SiccApi.apiKey) ?? ""
+        'Content-Type': 'application/json; charset=UTF-8',
+        'X-API-TOKEN': apiKey
       },
       body: jsonEncode(jsonBody)
     );
 
     if(res.statusCode == 201)
       {
-        return true;
+        return User.fromJson(jsonDecode(res.body)["data"]);
       }
     else
       {
-        return false;
+        return null;
       }
+  }
+
+  Future<bool> configureEnrollment(String apiUrl, String username, String enrollmentToken) async {
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    prefs.setString(SiccApi.apiUrlKey, apiUrl);
+
+    User? user = await enrollUser(username, enrollmentToken);
+    if(user == null)
+    {
+      SiccApi.resetConfig();
+      throw "Cannot enroll your account. Are you connected to Internet ?";
+    }
+
+    prefs.setString(SiccApi.apiKey, user.apiKey);
+    prefs.setString(SiccApi.enrollmentToken, user.enrollmentToken);
+    prefs.setString(SiccApi.username, user.name);
+
+    return true;
+  }
+
+  Future<User?> enrollUser(String username, String enrollmentToken) async {
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    Map<String, dynamic> jsonBody = {"username": username};
+
+    Response res = await post(
+        Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/enroll.php"),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'X-ENROLLMENT-TOKEN': enrollmentToken
+        },
+        body: jsonEncode(jsonBody)
+    );
+
+    if(res.statusCode == 201)
+    {
+      return User.fromJson(jsonDecode(res.body)["data"]);
+    }
+    else
+    {
+      return null;
+    }
+  }
+
+  static Future<bool> isEnrollmentTokenValid(String apiUrl, String enrollmentToken) async {
+
+    Response res = await get(
+      Uri.parse("$apiUrl/check_enrollment_token.php?token=$enrollmentToken"),
+      headers: <String, String>{
+      },
+    );
+
+    return res.statusCode == 200;
   }
 
   static bool isConfigured(SharedPreferences prefs) {
@@ -149,8 +211,36 @@ class SiccApi {
     prefs.remove(SiccApi.apiUrlKey);
     prefs.remove(SiccApi.apiKey);
     prefs.remove(SiccApi.enrollmentToken);
+    prefs.remove(SiccApi.username);
 
     return true;
   }
 
+  Future<Crate?> getCrate(String crateUuid) async {
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isConfigured = SiccApi.isConfigured(prefs);
+
+    if(!isConfigured)
+    {
+      return null;
+    }
+
+    Response res = await post(
+        Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/get_crate.php?uuid=$crateUuid"),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'X-API-TOKEN': prefs.getString(SiccApi.apiUrlKey) ?? ""
+        },
+    );
+
+    if(res.statusCode == 200)
+    {
+      return Crate.fromJson(jsonDecode(res.body)["data"]);
+    }
+    else
+    {
+      return null;
+    }
+  }
 }

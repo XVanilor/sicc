@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sicc/QRScanView.dart';
 import 'package:uuid/uuid.dart';
-import 'Home.dart';
 import 'Service/SiccApi.dart';
 
 class Config extends StatefulWidget {
@@ -16,6 +16,11 @@ class _ConfigState extends State<Config> {
 
   late SharedPreferences _prefs;
   bool isLoaded = false;
+  final SiccApi api = SiccApi();
+  final _formKey = GlobalKey<FormState>();
+  String? apiUrl = "";
+  String? privKey = "";
+  String? username = "";
 
   void loadPrefs() async {
     SharedPreferences prefs  = await SharedPreferences.getInstance();
@@ -34,15 +39,43 @@ class _ConfigState extends State<Config> {
   @override
   Widget build(BuildContext context) {
 
-    final _formKey = GlobalKey<FormState>();
-    String? apiUrl = "";
-    String? privKey = "";
-    String? username = "";
-
-    final SiccApi api = SiccApi();
-
     return !isLoaded ? const CircularProgressIndicator() : Scaffold(
-        appBar: AppBar(title: const Text("Configuration")),
+        appBar: AppBar(
+          title: const Text("Configuration"),
+          automaticallyImplyLeading: false,
+          actions: <Widget>[
+            IconButton(
+                icon: const Icon(Icons.home),
+                onPressed: () {
+
+                  // If not configured, show an alert
+                  if(!SiccApi.isConfigured(_prefs))
+                  {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('Alert'),
+                            content: const Text("Please configure app first"),
+                            actions: <Widget>[
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Close')
+                              )
+                            ],
+                          );
+                        });
+                  }
+                  else
+                  {
+                    Navigator.popAndPushNamed(context, "/").then((value) => setState((){}));
+                  }
+
+                })
+          ]
+        ),
         body: SingleChildScrollView(
           child: Padding(
           padding: const EdgeInsets.all(10.0),
@@ -63,7 +96,7 @@ class _ConfigState extends State<Config> {
                       ),
                       TextButton(
                           onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => Home(1)));
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const QRScanView())).then((value) => setState((){}));
                           },
                           child: const Text("Scan a QR Code", style: TextStyle(fontSize: 20.0))
                       ),
@@ -95,7 +128,9 @@ class _ConfigState extends State<Config> {
                                       decoration: const InputDecoration(
                                           hintText: "https://mysiccapi.app"
                                       ),
-                                      initialValue: _prefs.getString(SiccApi.apiUrlKey) ?? "",
+                                      controller: TextEditingController(
+                                        text: _prefs.getString(SiccApi.apiUrlKey) ?? ""
+                                      ),
                                       validator: (value) {
                                         if(value == null || value.isEmpty || Uri.tryParse(value) == null)
                                         {
@@ -109,7 +144,9 @@ class _ConfigState extends State<Config> {
                                       decoration: const InputDecoration(
                                           hintText: "Your name"
                                       ),
-                                      initialValue: _prefs.getString("username") ?? "",
+                                      controller: TextEditingController(
+                                        text: _prefs.getString(SiccApi.username) ?? ""
+                                      ),
                                       validator: (value) {
                                         if(value == null || value.isEmpty)
                                         {
@@ -123,7 +160,9 @@ class _ConfigState extends State<Config> {
                                       decoration: const InputDecoration(
                                           hintText: "Your API Token"
                                       ),
-                                      initialValue: _prefs.getString(SiccApi.apiKey) ?? "",
+                                      controller: TextEditingController(
+                                        text: _prefs.getString(SiccApi.apiKey) ?? ""
+                                      ),
                                       validator: (value) {
                                         if(value == null || value.isEmpty || !Uuid.isValidUUID(fromString: value))
                                         {
@@ -140,14 +179,34 @@ class _ConfigState extends State<Config> {
                                           _formKey.currentState?.save();
 
                                           try {
-
                                             bool configOk = await api.configure(apiUrl!, username!, privKey!);
                                             setState(() {});
 
                                             if(configOk)
                                             {
-                                              if (!mounted) return;
-                                              Navigator.pushReplacementNamed(context, "/");
+
+                                              // Configuration is OK, telling the user before moving back to home page
+                                              showDialog<void>(
+                                                context: context,
+                                                builder: (BuildContext context) {
+                                                  return AlertDialog(
+                                                    title: const Text("Alert"),
+                                                    content: const Text("Configuration was successful !"),
+                                                    actions: <Widget>[
+                                                      TextButton(
+                                                        style: TextButton.styleFrom(
+                                                          textStyle: Theme.of(context).textTheme.labelLarge,
+                                                        ),
+                                                        child: const Text('Close'),
+                                                        onPressed: () {
+                                                          if (!mounted) return;
+                                                          Navigator.pushReplacementNamed(context, "/");
+                                                        },
+                                                      )
+                                                    ],
+                                                  );
+                                                },
+                                              );
                                             }
 
                                           } catch(e)
@@ -156,7 +215,7 @@ class _ConfigState extends State<Config> {
                                               context: context,
                                               builder: (ctx) => AlertDialog(
                                                 title: const Text("Error"),
-                                                content: const Text("Cannot configure the app. Is your token valid ?"),
+                                                content: Text(e.toString()),
                                                 actions: <Widget>[
                                                   TextButton(
                                                     onPressed: () {
@@ -176,10 +235,9 @@ class _ConfigState extends State<Config> {
                                       child: const Text('Check Configuration'),
                                     ),
                                     ElevatedButton(
-                                      onPressed: () async {
+                                      onPressed: () {
 
-                                        await SiccApi.resetConfig();
-                                        setState(() {});
+                                        SiccApi.resetConfig().then((value) => loadPrefs());
                                       },
                                       style: ButtonStyle(backgroundColor: MaterialStateColor.resolveWith((states) => Colors.red)),
                                       child: const Text('Purge'),
