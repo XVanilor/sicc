@@ -17,17 +17,19 @@ class _CrateListState extends State<CrateList> {
   final SiccApi api = SiccApi();
 
   late SharedPreferences _prefs;
+  bool isLoaded = false;
 
-  void loadPrefs() async {
+  void _loadPrefs() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _prefs = prefs;
+      isLoaded = true;
     });
   }
 
   @override
   void initState() {
-    loadPrefs();
+    _loadPrefs();
     super.initState();
     setState(() {});
   }
@@ -35,7 +37,7 @@ class _CrateListState extends State<CrateList> {
   @override
   Widget build(BuildContext context) {
 
-    return Scaffold(
+    return !isLoaded ? const CircularProgressIndicator() : Scaffold(
         body: Stack(children: <Widget>[
           FutureBuilder(
             future: api.getCrates(),
