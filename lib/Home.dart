@@ -5,9 +5,14 @@ import 'package:sicc/Service/SiccApi.dart';
 import 'QRScan.dart';
 import 'CrateList.dart';
 
+enum Page {
+  crateList, qrScan
+}
+
 class Home extends StatelessWidget {
 
-  int selectedPage;
+  Page selectedPage = Page.crateList;
+
   Home(this.selectedPage, {super.key});
 
   Future<SharedPreferences> _loadPrefs() async {
@@ -21,10 +26,14 @@ class Home extends StatelessWidget {
         future: _loadPrefs(),
         builder: (BuildContext context, AsyncSnapshot<SharedPreferences>snapshot) {
 
-          if (snapshot.hasData && snapshot.data != null && !SiccApi.isConfigured(snapshot.data!)) {
+          // Check if API if configured
+          if (snapshot.hasData && snapshot.data != null && !SiccApi.isConfigured(snapshot.data!))
+          {
+            // If not, send Configuration page
             return const Config();
           }
 
+          // If API is configured, get to home
           return _home(context);
         });
   }
@@ -32,7 +41,7 @@ class Home extends StatelessWidget {
   _home(BuildContext context) {
 
     return DefaultTabController(
-            initialIndex:selectedPage,
+            initialIndex:selectedPage.index,
             length: 2,
             child: Scaffold(
               appBar: AppBar(

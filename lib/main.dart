@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sicc/Config.dart';
-import 'package:sicc/Home.dart';
+import 'package:sicc/Home.dart' as HomePage;
 import 'package:sicc/QRScan.dart';
 
 void main() {
@@ -18,7 +18,7 @@ class SICCMain extends StatelessWidget {
     return MaterialApp(
       initialRoute: "/",
       routes: {
-        '/': (context) => Home(0),
+        '/': (context) => HomePage.Home(HomePage.Page.crateList),
         '/config': (context) => const Config(),
         '/qrscan': (context) => const QRScan()
       },
