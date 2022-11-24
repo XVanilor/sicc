@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sicc/QRScanView.dart';
+import 'QRScanView.dart';
 import 'package:uuid/uuid.dart';
-import 'Service/SiccApi.dart';
+import '/Service/SiccApi.dart';
 
 class Config extends StatefulWidget {
 

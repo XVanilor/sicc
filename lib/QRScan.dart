@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sicc/Home.dart' as HomePage;
-import "package:sicc/Service/SEPManager.dart";
-import 'package:sicc/CrateEdit.dart';
-import 'package:sicc/Model/Crate.dart';
-import 'package:sicc/Service/SiccApi.dart';
+import 'Home.dart' as HomePage;
+import "/Service/SEPManager.dart";
+import 'CrateEdit.dart';
+import '/Model/Crate.dart';
+import '/Service/SiccApi.dart';
 
 class QRScan extends StatefulWidget {
   const QRScan({Key? key}) : super(key: key);

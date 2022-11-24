@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sicc/Model/Crate.dart';
+import '/Model/Crate.dart';
+import '/Model/User.dart';
 import 'package:uuid/uuid.dart';
-import '../Model/User.dart';
 
 class SiccApi {
 

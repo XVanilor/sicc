@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sicc/Config.dart';
-import 'package:sicc/Home.dart' as HomePage;
-import 'package:sicc/QRScan.dart';
+import 'Config.dart';
+import 'Home.dart' as HomePage;
+import 'QRScan.dart';
 
 void main() {
 
