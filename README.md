@@ -1,4 +1,4 @@
-# sicc
+# SICC
 
 Simple Item Crate Controller
 
