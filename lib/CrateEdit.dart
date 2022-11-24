@@ -76,8 +76,7 @@ class _CrateEditState extends State<CrateEdit> {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => CrateQR(
-                            qrData: qrCodeData, crateName: widget.crate.name)));
+                        builder: (context) => CrateQR(qrData: qrCodeData, crateName: widget.crate.name)));
               }),
           IconButton(
             icon: const Icon(Icons.save),
@@ -86,8 +85,8 @@ class _CrateEditState extends State<CrateEdit> {
               SiccApi api = SiccApi();
               api.saveCrate(widget.crate);
 
-              // Go back to main activity
-              Navigator.pop(context);
+              // Go back to home
+              Navigator.popAndPushNamed(context, "/");
             },
           )
         ]),
