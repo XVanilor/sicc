@@ -109,7 +109,7 @@ class _QRScanState extends State<QRScan> {
           // Api is not configured. Asks for username and starts enrollment process
           else {
             _showUsernameConfigurationDialog(qrData);
-          };
+          }
         }
       }
     }
@@ -188,28 +188,28 @@ class _QRScanState extends State<QRScan> {
               child: const Text('Apply'),
               onPressed: () {
 
-                try {
+                api.configureEnrollment(qrData.apiUrl, username, qrData.enrollmentToken).then((configurationSucceed) {
 
-                  api.configureEnrollment(qrData.apiUrl, username, qrData.enrollmentToken).then((configurationSucceed) {
+                  setState((){});
 
-                    setState((){});
+                  if(configurationSucceed)
+                  {
+                    dialogOpened = false;
+                    _getCrate(context, qrData.crateUuid);
+                  }
+                }).onError((error, stackTrace)  {
 
-                    if(configurationSucceed)
-                    {
-                      dialogOpened = false;
-                      _getCrate(context, qrData.crateUuid);
-                    }
-                  });
-
-                  // Update app with configuration data
+                  dialogOpened = false;
                   setState(() {});
-                }
-                catch(e)
-                {
-                  _showDialog(e.toString(), (){});
-                }
 
+                  _showDialog(error.toString(), (){});
+
+                });
+
+                // Update app with configuration data
+                setState(() {});
                 Navigator.of(context).pop();
+
               },
             )
           ],

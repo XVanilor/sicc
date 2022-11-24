@@ -16,7 +16,7 @@ class SiccApi {
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    Response res = await get(Uri.parse("${prefs.getString(SiccApi.apiUrlKey)}/list.php"));
+    Response res = await get(Uri.parse("${prefs.getString(SiccApi.apiUrlKey)}/list.php")).timeout(const Duration(seconds: 5));
 
     if(res.statusCode == 200){
       List<dynamic> body = jsonDecode(res.body)["data"];
@@ -43,7 +43,7 @@ class SiccApi {
           'X-API-TOKEN': prefs.getString(SiccApi.apiKey) ?? ""
         },
       body: jsonEncode(crate.toJson())
-    );
+    ).timeout(const Duration(seconds: 5));
 
     if(res.statusCode == 200)
       {
@@ -122,7 +122,7 @@ class SiccApi {
         'X-API-TOKEN': apiKey
       },
       body: jsonEncode(jsonBody)
-    );
+    ).timeout(const Duration(seconds: 5));
 
     if(res.statusCode == 201)
       {
@@ -140,16 +140,23 @@ class SiccApi {
 
     prefs.setString(SiccApi.apiUrlKey, apiUrl);
 
-    User? user = await enrollUser(username, enrollmentToken);
-    if(user == null)
-    {
-      SiccApi.resetConfig();
-      throw "Cannot enroll your account. Are you connected to Internet ?";
-    }
+    try {
 
-    prefs.setString(SiccApi.apiKey, user.apiKey);
-    prefs.setString(SiccApi.enrollmentToken, user.enrollmentToken);
-    prefs.setString(SiccApi.username, user.name);
+      User? user = await enrollUser(username, enrollmentToken);
+      if(user == null)
+      {
+        SiccApi.resetConfig();
+        throw "Cannot enroll your account. Are you connected to Internet ?";
+      }
+
+      prefs.setString(SiccApi.apiKey, user.apiKey);
+      prefs.setString(SiccApi.enrollmentToken, user.enrollmentToken);
+      prefs.setString(SiccApi.username, user.name);
+
+    } catch (e)
+    {
+      throw e;
+    }
 
     return true;
   }
@@ -167,11 +174,15 @@ class SiccApi {
           'X-ENROLLMENT-TOKEN': enrollmentToken
         },
         body: jsonEncode(jsonBody)
-    );
+    ).timeout(const Duration(seconds: 5));
 
     if(res.statusCode == 201)
     {
       return User.fromJson(jsonDecode(res.body)["data"]);
+    }
+    if(res.statusCode == 401)
+    {
+      throw "Cannot verify enrollment token $enrollmentToken. Please contact your app administrator";
     }
     else
     {
@@ -183,9 +194,8 @@ class SiccApi {
 
     Response res = await get(
       Uri.parse("$apiUrl/check_enrollment_token.php?token=$enrollmentToken"),
-      headers: <String, String>{
-      },
-    );
+
+    ).timeout(const Duration(seconds: 5));
 
     return res.statusCode == 200;
   }
@@ -232,7 +242,7 @@ class SiccApi {
           'Content-Type': 'application/json; charset=UTF-8',
           'X-API-TOKEN': prefs.getString(SiccApi.apiUrlKey) ?? ""
         },
-    );
+    ).timeout(const Duration(seconds: 5));
 
     if(res.statusCode == 200)
     {
