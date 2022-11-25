@@ -134,7 +134,7 @@ class SiccApi {
       }
   }
 
-  Future<bool> configureEnrollment(String apiUrl, String username, String enrollmentToken) async {
+  Future<bool> configureEnrollment(String apiUrl, String username, String enrollmentToken, String pinCode) async {
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -142,7 +142,7 @@ class SiccApi {
 
     try {
 
-      User? user = await enrollUser(username, enrollmentToken);
+      User? user = await enrollUser(username, enrollmentToken, pinCode);
       if(user == null)
       {
         SiccApi.resetConfig();
@@ -161,11 +161,11 @@ class SiccApi {
     return true;
   }
 
-  Future<User?> enrollUser(String username, String enrollmentToken) async {
+  Future<User?> enrollUser(String username, String enrollmentToken, String pinCode) async {
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    Map<String, dynamic> jsonBody = {"username": username};
+    Map<String, dynamic> jsonBody = {"username": username, "pinCode": pinCode};
 
     Response res = await post(
         Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/enroll.php"),
@@ -182,7 +182,7 @@ class SiccApi {
     }
     if(res.statusCode == 401)
     {
-      throw "Cannot verify enrollment token $enrollmentToken. Please contact your app administrator";
+      throw jsonDecode(res.body)["data"];
     }
     else
     {
