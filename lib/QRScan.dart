@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Home.dart' as HomePage;
@@ -27,7 +28,9 @@ class _QRScanState extends State<QRScan> {
 
   bool dialogOpened = false;
   bool crateLoaded = false;
+
   String username = "";
+  String pinCode = "";
 
   void _loadPrefs() async {
     SharedPreferences prefs  = await SharedPreferences.getInstance();
@@ -175,11 +178,26 @@ class _QRScanState extends State<QRScan> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Configuration"),
-          content: TextField(
-            onChanged: (value) { username = value; },
-            controller: TextEditingController(text: username),
-            decoration: const InputDecoration(hintText: "Your name"),
-          ),
+          content: SizedBox(
+            height: 100,
+            child: Column(
+            children: <Widget>[
+              TextField(
+                onChanged: (value) { username = value; },
+                controller: TextEditingController(text: username),
+                decoration: const InputDecoration(hintText: "Your name"),
+              ),
+              TextField(
+                onChanged: (value) { pinCode = value; },
+                controller: TextEditingController(text: pinCode),
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly
+                ],
+                decoration: const InputDecoration(hintText: "PIN code"),
+              ),
+            ],
+          )),
           actions: <Widget>[
             TextButton(
               style: TextButton.styleFrom(
@@ -188,7 +206,7 @@ class _QRScanState extends State<QRScan> {
               child: const Text('Apply'),
               onPressed: () {
 
-                api.configureEnrollment(qrData.apiUrl, username, qrData.enrollmentToken).then((configurationSucceed) {
+                api.configureEnrollment(qrData.apiUrl, username, qrData.enrollmentToken, pinCode).then((configurationSucceed) {
 
                   setState((){});
 
