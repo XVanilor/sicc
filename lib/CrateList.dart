@@ -124,10 +124,29 @@ class _CrateListState extends State<CrateList> {
           ),
           Positioned(
             left: 30.0,
-            bottom: 45.0,
-            child: Text(
-                "Loggued as ${_prefs.getString(SiccApi.username) ?? ""}",
-              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12.0)
+            bottom: 40.0,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                    "Loggued as ${_prefs.getString(SiccApi.username) ?? ""}",
+                    style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12.0)
+                ),
+                FutureBuilder(
+                  future: api.getPIN(),
+                  builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
+
+                    if(!snapshot.hasData && snapshot.data != null){
+                      return const Text("Unable to retrieve PIN",  style: TextStyle(fontStyle: FontStyle.italic, fontSize: 14.0));
+                    }
+                    return Text(
+                        "PIN Code: ${snapshot.data}",
+                        style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12.0)
+                    );
+                  }
+                )
+              ]
             )
           )
         ]));
