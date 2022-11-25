@@ -16,7 +16,12 @@ class SiccApi {
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    Response res = await get(Uri.parse("${prefs.getString(SiccApi.apiUrlKey)}/list.php")).timeout(const Duration(seconds: 5));
+    Response res = await get(
+        Uri.parse("${prefs.getString(SiccApi.apiUrlKey)}/list.php"),
+        headers: <String, String>{
+          'X-API-TOKEN': prefs.getString(SiccApi.apiKey) ?? ""
+        },
+    ).timeout(const Duration(seconds: 5));
 
     if(res.statusCode == 200){
       List<dynamic> body = jsonDecode(res.body)["data"];
@@ -47,8 +52,8 @@ class SiccApi {
 
     if(res.statusCode == 200)
       {
-        List<dynamic> body = jsonDecode(res.body)["data"];
-        return Crate.fromJson(body[0]);
+        Map<String, dynamic> body = jsonDecode(res.body)["data"];
+        return Crate.fromJson(body);
       }
     else
     {
@@ -190,16 +195,6 @@ class SiccApi {
     }
   }
 
-  static Future<bool> isEnrollmentTokenValid(String apiUrl, String enrollmentToken) async {
-
-    Response res = await get(
-      Uri.parse("$apiUrl/check_enrollment_token.php?token=$enrollmentToken"),
-
-    ).timeout(const Duration(seconds: 5));
-
-    return res.statusCode == 200;
-  }
-
   static bool isConfigured(SharedPreferences prefs) {
 
     final apiUri = Uri.tryParse(prefs.getString(SiccApi.apiUrlKey) ?? "");
@@ -236,7 +231,7 @@ class SiccApi {
       return null;
     }
 
-    Response res = await post(
+    Response res = await get(
         Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/get_crate.php?uuid=$crateUuid"),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
