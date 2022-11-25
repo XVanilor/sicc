@@ -237,7 +237,32 @@ class _ConfigState extends State<Config> {
                                     ElevatedButton(
                                       onPressed: () {
 
-                                        SiccApi.resetConfig().then((value) => loadPrefs());
+                                        showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                title: const Text('Alert'),
+                                                content: const Text("Are you sure ?"),
+                                                actions: <Widget>[
+                                                  TextButton(
+                                                      onPressed: () {
+
+                                                        Navigator.pop(context);
+                                                      },
+                                                      child: const Text('Close')
+                                                  ),
+                                                  TextButton(
+                                                      onPressed: () {
+
+                                                        SiccApi.resetConfig().then((value) => loadPrefs());
+
+                                                        Navigator.pop(context);
+                                                      },
+                                                      child: const Text('Confirm')
+                                                  )
+                                                ],
+                                              );
+                                            });
                                       },
                                       style: ButtonStyle(backgroundColor: MaterialStateColor.resolveWith((states) => Colors.red)),
                                       child: const Text('Purge'),
