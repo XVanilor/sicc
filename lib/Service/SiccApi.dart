@@ -235,13 +235,42 @@ class SiccApi {
         Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/get_crate.php?uuid=$crateUuid"),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-          'X-API-TOKEN': prefs.getString(SiccApi.apiUrlKey) ?? ""
+          'X-API-TOKEN': prefs.getString(SiccApi.apiKey) ?? ""
         },
     ).timeout(const Duration(seconds: 5));
 
     if(res.statusCode == 200)
     {
       return Crate.fromJson(jsonDecode(res.body)["data"]);
+    }
+    else
+    {
+      return null;
+    }
+  }
+
+  Future<String?> getPIN() async {
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isConfigured = SiccApi.isConfigured(prefs);
+
+    if(!isConfigured)
+    {
+      return null;
+    }
+
+    Response res = await get(
+      Uri.parse("${prefs.getString(SiccApi.apiUrlKey) ?? "http://127.0.0.1"}/get_pin.php"),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'X-API-TOKEN': prefs.getString(SiccApi.apiKey) ?? ""
+      },
+    ).timeout(const Duration(seconds: 5));
+
+    if(res.statusCode == 200)
+    {
+      print(jsonDecode(res.body));
+      return jsonDecode(res.body)["data"];
     }
     else
     {
