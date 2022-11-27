@@ -258,7 +258,7 @@ class _QRScanState extends State<QRScan> {
           }
           else
           {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => CrateEdit(crate: crate, isNameEditable: false)));
+            Navigator.of(context).push(MaterialPageRoute(builder: (context) => CrateEdit(crate: crate, isNameEditable: false, returnToHomeOnBackward: true)));
           }
         });
       }
