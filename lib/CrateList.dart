@@ -45,16 +45,32 @@ class _CrateListState extends State<CrateList> {
 
               List<Crate>? crates = snapshot.data;
               if (crates != null) {
+
+                // Extract all crates from tree
+                List<Crate> crate_queue = crates.toList();
+                List<Crate> crates_flat = [];
+
+                int queueSize = crate_queue.length;
+                while(queueSize > 0)
+                {
+                    Crate c = crate_queue.removeLast();
+                    queueSize--;
+                    queueSize += c.crates.length;
+                    crate_queue.addAll(c.crates);
+
+                    crates_flat.add(c);
+                }
+
                 // Sort crates by alphabetical order
-                crates.sort((a, b) {
+                crates_flat.sort((a, b) {
                   return a.name.toLowerCase().compareTo(b.name.toLowerCase());
                 });
 
                 return ListView(
-                  children: crates
+                  children: crates_flat
                       .map((Crate c) => ListTile(
                     title: Text(c.name),
-                    subtitle: Text("${c.items.length} items"),
+                    subtitle: Text("${c.countItems()} items${c.countChildCrates() > 0 ? " ${c.countChildCrates()} crates" : ""}"),
                     trailing: IconButton(
                         onPressed: () {
                           showDialog<String>(
@@ -111,7 +127,9 @@ class _CrateListState extends State<CrateList> {
                 Crate newCrate = Crate(
                     uuid: const Uuid().v4(),
                     name: "New Crate",
-                    items: [defaultItem]);
+                    items: [defaultItem],
+                    crates: []
+                );
 
                 Navigator.push(
                     context,

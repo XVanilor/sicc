@@ -269,7 +269,6 @@ class SiccApi {
 
     if(res.statusCode == 200)
     {
-      print(jsonDecode(res.body));
       return jsonDecode(res.body)["data"];
     }
     else
